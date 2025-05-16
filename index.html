@@ -106,9 +106,9 @@ function MathRequest(req) {
   const meta = JSON.parse(req.meta_info);
   document.getElementById("server").textContent = req.server_id;
   document.getElementById("level").textContent = meta.cityLvl;
-  document.getElementById("Мощь сейчас").textContent = number_format(meta.power);
-  document.getElementById("Максимально зарегистрированная мощь").textContent = number_format(meta.maxPower);
-  document.getElementById("Скрытая мощь").textContent = number_format(meta.maxPower - meta.power);
+  document.getElementById("power_now").textContent = number_format(meta.power);
+  document.getElementById("power_max").textContent = number_format(meta.maxPower);
+  document.getElementById("poten").textContent = number_format(meta.maxPower - meta.power);
   toPHP(req);
 }
 </script>

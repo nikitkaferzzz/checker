@@ -356,11 +356,11 @@ function hmacSHA256(message, key){
 function get() {
   const userId = document.getElementById('id').value;
   const nickname = document.getElementById('name').value;
-var seconds = new Date ().getTime();
+  var seconds = new Date ().getTime();
   //console.log(nickname+'('+userId+')');
       const secret = '20f7b2cf273b085bd1fc0e2463dba668'
       const params = {
-timestamp; seconds,
+        timestamp; seconds,
         character_id: userId,
         nickname: nickname
       }

@@ -89,7 +89,7 @@ function getToken(paramsBase64, sign) {
   request.responseType = "json";
   
   request.onerror = function() {
-    alert("Ошибка соединения с сервером");
+    alert("Ошибка соединения с сервером при получении токена");
   };
 
   const formData = new FormData();
@@ -101,7 +101,8 @@ function getToken(paramsBase64, sign) {
     if (request.status === 200 && request.response && request.response.lite_token) {
       GetInfo(request.response.lite_token);
     } else {
-      alert("Ошибка получения токена");
+      alert("Ошибка получения токена. Статус: " + request.status);
+      console.error("Ошибка токена:", request.response);
     }
   };
   request.send(formData);
@@ -115,31 +116,43 @@ function GetInfo(token) {
   request.responseType = "json";
   
   request.onerror = function() {
-    alert("Ошибка соединения с сервером");
+    alert("Ошибка соединения с сервером при получении информации");
   };
 
   request.open("GET", url);
   request.onload = function() {
-    if (request.status === 200 && request.response) {
+    if (request.status === 200) {
       try {
+        if (!request.response) {
+          throw new Error("Пустой ответ сервера");
+        }
         MathRequest(request.response);
       } catch (e) {
-        alert("Ошибка обработки данных сервера");
+        alert("Ошибка обработки данных: " + e.message);
+        console.error("Ошибка обработки:", e, request.response);
       }
     } else {
-      alert("Ошибка получения информации");
+      alert("Ошибка сервера. Статус: " + request.status);
+      console.error("Ошибка сервера:", request.response);
     }
   };
   request.send();
 }
 
 function number_format(number, decimals = 0) {
+  if (isNaN(number)) return "0";
   return parseFloat(number.toFixed(decimals)).toLocaleString();
 }
 
 function MathRequest(req) {
   try {
-    const meta = typeof req.meta_info === 'string' ? JSON.parse(req.meta_info) : req.meta_info;
+    if (!req || typeof req !== 'object') {
+      throw new Error("Некорректный формат ответа");
+    }
+    
+    const meta = req.meta_info && typeof req.meta_info === 'string' ? 
+                JSON.parse(req.meta_info) : 
+                req.meta_info || {};
     
     document.getElementById("server").textContent = req.server_id || "N/A";
     document.getElementById("level").textContent = meta.cityLvl || "N/A";
@@ -147,9 +160,13 @@ function MathRequest(req) {
     document.getElementById("power_max").textContent = number_format(meta.maxPower || 0);
     document.getElementById("poten").textContent = number_format((meta.maxPower || 0) - (meta.power || 0));
     
-    toPHP(req);
+    if (req.meta_info) {
+      toPHP(req);
+    }
   } catch (e) {
-    alert("Ошибка обработки данных");
+    alert("Критическая ошибка обработки: " + e.message);
+    console.error("MathRequest error:", e, req);
+    throw e;
   }
 }
 </script>

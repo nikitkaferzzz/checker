@@ -63,6 +63,12 @@ function hmacSHA256(message, key) {
 function get() {
   const userId = document.getElementById('id').value;
   const nickname = document.getElementById('name').value;
+  
+  if (!userId || !nickname) {
+    alert("Пожалуйста, заполните все поля!");
+    return;
+  }
+
   const secret = '20f7b2cf273b085bd1fc0e2463dba668';
   const params = {
     timestamp: new Date().getTime(),
@@ -78,23 +84,52 @@ function get() {
 function getToken(paramsBase64, sign) {
   const addr = 'https://5c7021242c10k1d2.tap4hub.com';
   const url = `${addr}/tgs/gateway2/character/litetoken?client_id=k1d2:oap.2.0.0`;
+  
   const request = new XMLHttpRequest();
   request.responseType = "json";
+  
+  request.onerror = function() {
+    alert("Ошибка соединения с сервером");
+  };
+
   const formData = new FormData();
   formData.append("encoded_payload", paramsBase64);
   formData.append("sign", sign);
+  
   request.open("POST", url);
-  request.onload = () => GetInfo(request.response.lite_token);
+  request.onload = function() {
+    if (request.status === 200 && request.response && request.response.lite_token) {
+      GetInfo(request.response.lite_token);
+    } else {
+      alert("Ошибка получения токена");
+    }
+  };
   request.send(formData);
 }
 
 function GetInfo(token) {
   const addr = 'https://5c7021242c10k1d2.tap4hub.com';
   const url = `${addr}/tgs/gateway2/oap/character/info?lite_token=${encodeURIComponent(token)}&client_id=k1d2:oap.2.0.0`;
+  
   const request = new XMLHttpRequest();
   request.responseType = "json";
+  
+  request.onerror = function() {
+    alert("Ошибка соединения с сервером");
+  };
+
   request.open("GET", url);
-  request.onload = () => MathRequest(request.response);
+  request.onload = function() {
+    if (request.status === 200 && request.response) {
+      try {
+        MathRequest(request.response);
+      } catch (e) {
+        alert("Ошибка обработки данных сервера");
+      }
+    } else {
+      alert("Ошибка получения информации");
+    }
+  };
   request.send();
 }
 
@@ -103,13 +138,19 @@ function number_format(number, decimals = 0) {
 }
 
 function MathRequest(req) {
-  const meta = JSON.parse(req.meta_info);
-  document.getElementById("server").textContent = req.server_id;
-  document.getElementById("level").textContent = meta.cityLvl;
-  document.getElementById("power_now").textContent = number_format(meta.power);
-  document.getElementById("power_max").textContent = number_format(meta.maxPower);
-  document.getElementById("poten").textContent = number_format(meta.maxPower - meta.power);
-  toPHP(req);
+  try {
+    const meta = typeof req.meta_info === 'string' ? JSON.parse(req.meta_info) : req.meta_info;
+    
+    document.getElementById("server").textContent = req.server_id || "N/A";
+    document.getElementById("level").textContent = meta.cityLvl || "N/A";
+    document.getElementById("power_now").textContent = number_format(meta.power || 0);
+    document.getElementById("power_max").textContent = number_format(meta.maxPower || 0);
+    document.getElementById("poten").textContent = number_format((meta.maxPower || 0) - (meta.power || 0));
+    
+    toPHP(req);
+  } catch (e) {
+    alert("Ошибка обработки данных");
+  }
 }
 </script>
 </html>
